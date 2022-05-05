@@ -1,6 +1,6 @@
 import dataclasses
 from ast import literal_eval
-from typing import Literal, TypedDict
+from typing import Literal, TypedDict, Optional
 
 from src.tools import dict_to_json
 
@@ -21,3 +21,12 @@ class Event(TypedDict):
     """
     body: str
     httpMethod: Literal['POST', 'OPTIONS']
+
+
+class Resp(TypedDict, total=False):
+    """
+    https://cloud.yandex.ru/docs/functions/concepts/function-invoke#response
+    """
+    statusCode: Literal[200]
+    body: str
+    headers: dict

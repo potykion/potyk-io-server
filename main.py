@@ -1,9 +1,9 @@
 import json
 
-from src.models import Req, Event
+from src.models import Req, Event, Resp
 
 
-def handler(event: Event, context):
+def handler(event: Event, context) -> Resp:
     """
     https://functions.yandexcloud.net/d4evjj6ajnla3qrutemd
     :param event:
