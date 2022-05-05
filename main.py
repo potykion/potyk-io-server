@@ -1,6 +1,7 @@
 import json
 
-from src.models import Req, Event, Resp
+from src.models import Req
+from src.yc import Event, Resp, resp_cors
 
 
 def handler(event: Event, context) -> Resp:
@@ -11,14 +12,7 @@ def handler(event: Event, context) -> Resp:
     :return:
     """
     if event['httpMethod'] == 'OPTIONS':
-        return {
-            'statusCode': 200,
-            'body': '',
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': '*'
-            }
-        }
+        return resp_cors()
 
     body = json.loads(event['body'])
     req = Req(**body)
