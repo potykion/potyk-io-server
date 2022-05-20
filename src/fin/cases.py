@@ -3,6 +3,7 @@ import datetime as dt
 from abc import ABC
 from dataclasses import dataclass, field
 from decimal import Decimal
+from itertools import repeat
 from typing import List, Protocol, Dict
 
 from src.fin.utils import split_filter
@@ -40,7 +41,7 @@ class FinGoalProgress:
 
     @property
     def dt_diff(self) -> int:
-        return (self.goal.deadline_date - self.cur_date).days
+        return (self.goal.deadline_date - self.cur_date).days or 1
 
     @property
     def done(self):
@@ -87,8 +88,8 @@ class SplitDeposit(Protocol):
                 cur_date=params.cur_date + dt.timedelta(days=params.deposit_days),
             )
 
-        cur_date = params.cur_date
-        print(cls.__name__)
+        print(f'## {cls.__name__}')
+        print()
 
         completed_goals: list[FinGoalProgress] = []
         while params.goals:
@@ -96,24 +97,29 @@ class SplitDeposit(Protocol):
             completed_goals += [goal for goal in params.goals if goal.done]
             params = dataclasses.replace(params, goals=[goal for goal in params.goals if not goal.done])
 
-        completed_goals = sorted(completed_goals, key=lambda goal: goal.cur_date)
+        completed_goals = sorted(completed_goals, key=lambda prog: prog.goal.deadline_date)
         for progress in completed_goals:
+            date_diff = (progress.goal.deadline_date - progress.cur_date).days
             print(
-                progress.goal.name,
-                progress.cur_date,
-                '<' if progress.goal.deadline_date > progress.cur_date else '>',
-                progress.goal.deadline_date,
-                '=',
-                (progress.goal.deadline_date - progress.cur_date).days,
+                f'Цель: {progress.goal.name}',
+                f'Дедлайн: {progress.goal.deadline_date}',
+                f'Дата погашения: {progress.cur_date}',
+                f'Быстрее на {date_diff}' if date_diff > 0 else f'Просрочка на {abs(date_diff)}',
+                sep=' | '
             )
 
+        max_deadline = completed_goals[-1].goal.deadline_date
+        max_cur_date = max(g.cur_date for g in completed_goals)
+        date_diff = (max_deadline - max_cur_date).days
+
         print(
-            completed_goals[-1].cur_date,
-            '-',
-            cur_date,
-            '=',
-            (completed_goals[-1].cur_date - cur_date).days,
+            f'Последний дедлайн: {max_deadline}',
+            f'Последнее погашение: {max_cur_date}',
+            f'Быстрее на {date_diff}' if date_diff > 0 else f'Просрочка на {abs(date_diff)}',
+            sep=' | '
         )
+
+        return date_diff
 
 
 @dataclass()
@@ -175,5 +181,3 @@ class SplitDepositByRatioWithTodayMonthFirst(SplitDeposit):
 
         split_.update(SplitDepositByRatio(self.deposit, goals)())
         return split_
-
-# SplitDepositByRatioWithTodayMonthClose
